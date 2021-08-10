@@ -48,6 +48,10 @@ public:
           highByte = NULL;
 
           break;
+        default:
+          byteIndex = 0;
+
+          break;
       }
 
       yield();
