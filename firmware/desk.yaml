@@ -1,0 +1,42 @@
+substitutions:
+  device_name: Desk
+  name: desk
+
+esphome:
+  name: ${name}
+  comment: ${device_name}
+  platform: ESP8266  # TODO Change to your platform
+  board: nodemcuv2  # TODO Change to your board
+  includes:
+    - src/desk.h
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+uart:
+  id: desk_uart
+  baud_rate: 9600
+  tx_pin: D5
+  rx_pin: D6
+
+sensor:
+  - platform: custom
+    lambda: |-
+      auto desk_height_sensor = new DeskHeightSensor(id(desk_uart));
+      App.register_component(desk_height_sensor);
+      return {desk_height_sensor};
+    sensors:
+      id: "desk_height"
+      name: Desk Height
+      unit_of_measurement: mm
+      accuracy_decimals: 0
+      icon: "mdi:counter"
+
+# Enable logging
+logger:
+  level: ERROR
+  baud_rate: 9600
+
+mqtt:
+  broker: 192.168.1.60

@@ -1,1 +1,5 @@
 .pio
+.pioenvs
+.esphome
+secrets.yaml
+desk/
