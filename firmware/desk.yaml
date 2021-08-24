@@ -8,7 +8,7 @@ esphome:
   platform: ESP8266  # TODO Change to your platform
   board: nodemcuv2  # TODO Change to your board
   includes:
-    - src/desk.h
+    - src/desk_height_sensor.h
 
 wifi:
   ssid: !secret wifi_ssid
@@ -17,7 +17,7 @@ wifi:
 uart:
   id: desk_uart
   baud_rate: 9600
-  tx_pin: D5
+  tx_pin: D8
   rx_pin: D6
 
 sensor:
@@ -35,8 +35,150 @@ sensor:
 
 # Enable logging
 logger:
-  level: ERROR
+  level: INFO
   baud_rate: 9600
 
 mqtt:
-  broker: 192.168.1.60
+  broker: !secret mqtt_server
+  log_topic: desk/logs
+
+output:
+  - platform: gpio
+    pin:
+      number: D1
+      inverted: true
+    id: raise_output
+  - platform: gpio
+    pin:
+      number: D2
+      inverted: true
+    id: lower_output
+  - platform: gpio
+    pin:
+      number: D5
+      inverted: true
+    id: memory_key_output
+
+switch:
+  - platform: template
+    name: Raise
+    id: raise_switch
+    turn_on_action:
+      - switch.turn_off: lower_switch
+      - switch.turn_off: memory_1_switch
+      - switch.turn_off: memory_2_switch
+      - switch.turn_off: memory_3_switch
+      - switch.turn_off: memory_4_switch
+      - output.turn_on: raise_output
+      - switch.template.publish:
+          id: raise_switch
+          state: true
+    turn_off_action:
+      - output.turn_off: raise_output
+      - switch.template.publish:
+          id: raise_switch
+          state: false
+  - platform: template
+    name: Lower
+    id: lower_switch
+    turn_on_action:
+      - switch.turn_off: raise_switch
+      - switch.turn_off: memory_1_switch
+      - switch.turn_off: memory_2_switch
+      - switch.turn_off: memory_3_switch
+      - switch.turn_off: memory_4_switch
+      - output.turn_on: lower_output
+      - switch.template.publish:
+          id: lower_switch
+          state: true
+    turn_off_action:
+      - output.turn_off: lower_output
+      - switch.template.publish:
+          id: lower_switch
+          state: false
+  - platform: template
+    name: Memory 1
+    id: memory_1_switch
+    turn_on_action:
+      - switch.turn_off: raise_switch
+      - switch.turn_off: lower_switch
+      - switch.turn_off: memory_2_switch
+      - switch.turn_off: memory_3_switch
+      - switch.turn_off: memory_4_switch
+      - output.turn_on: raise_output
+      - output.turn_on: lower_output
+      - switch.template.publish:
+          id: memory_1_switch
+          state: true
+      - delay: 500ms
+      - switch.turn_off: memory_1_switch
+    turn_off_action:
+      - output.turn_off: raise_output
+      - output.turn_off: lower_output
+      - switch.template.publish:
+          id: memory_1_switch
+          state: false
+  - platform: template
+    name: Memory 2
+    id: memory_2_switch
+    turn_on_action:
+      - switch.turn_off: raise_switch
+      - switch.turn_off: lower_switch
+      - switch.turn_off: memory_1_switch
+      - switch.turn_off: memory_3_switch
+      - switch.turn_off: memory_4_switch
+      - output.turn_on: memory_key_output
+      - switch.template.publish:
+          id: memory_2_switch
+          state: true
+      - delay: 500ms
+      - switch.turn_off: memory_2_switch
+    turn_off_action:
+      - output.turn_off: memory_key_output
+      - switch.template.publish:
+          id: memory_2_switch
+          state: false
+  - platform: template
+    name: Memory 3
+    id: memory_3_switch
+    turn_on_action:
+      - switch.turn_off: raise_switch
+      - switch.turn_off: lower_switch
+      - switch.turn_off: memory_1_switch
+      - switch.turn_off: memory_2_switch
+      - switch.turn_off: memory_4_switch
+      - output.turn_on: memory_key_output
+      - output.turn_on: lower_output
+      - switch.template.publish:
+          id: memory_3_switch
+          state: true
+      - delay: 500ms
+      - switch.turn_off: memory_3_switch
+    turn_off_action:
+      - output.turn_off: memory_key_output
+      - output.turn_off: lower_output
+      - switch.template.publish:
+          id: memory_3_switch
+          state: false
+  - platform: template
+    name: Memory 4
+    id: memory_4_switch
+    turn_on_action:
+      - switch.turn_off: raise_switch
+      - switch.turn_off: lower_switch
+      - switch.turn_off: memory_1_switch
+      - switch.turn_off: memory_2_switch
+      - switch.turn_off: memory_3_switch
+      - output.turn_on: memory_key_output
+      - output.turn_on: raise_output
+      - switch.template.publish:
+          id: memory_4_switch
+          state: true
+      - delay: 500ms
+      - switch.turn_off: memory_4_switch
+    turn_off_action:
+      - output.turn_off: memory_key_output
+      - output.turn_off: raise_output
+      - switch.template.publish:
+          id: memory_4_switch
+          state: false

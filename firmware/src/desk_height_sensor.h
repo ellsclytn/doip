@@ -23,7 +23,6 @@ public:
 
       switch (byteIndex) {
         case 0 ... 1:
-          ESP_LOGD("DEBUG", "Byte index %d: %02x", byteIndex, incomingByte);
           if (incomingByte == 1) {
             byteIndex++;
           } else {
@@ -32,7 +31,7 @@ public:
 
           break;
         case 2:
-          ESP_LOGD("DEBUG", "Byte index %d: %02x", byteIndex, incomingByte);
+          /* ESP_LOGD("DEBUG", "Byte index %d: %02x", byteIndex, incomingByte); */
           if (incomingByte >= 2 && incomingByte <= 4) {
             highByte = incomingByte;
             byteIndex++;
@@ -42,7 +41,7 @@ public:
 
           break;
         case 3:
-          ESP_LOGD("DEBUG", "Byte index %d: %02x", byteIndex, incomingByte);
+          /* ESP_LOGD("DEBUG", "Byte index %d: %02x", byteIndex, incomingByte); */
           height = ((unsigned int)highByte << 8) + incomingByte;
           byteIndex = 0;
           highByte = NULL;
