@@ -5,8 +5,8 @@ substitutions:
 esphome:
   name: ${name}
   comment: ${device_name}
-  platform: ESP8266  # TODO Change to your platform
-  board: nodemcuv2  # TODO Change to your board
+  platform: ESP8266
+  board: nodemcuv2
   includes:
     - src/desk_height_sensor.h
 
