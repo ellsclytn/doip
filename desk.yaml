@@ -18,7 +18,14 @@ uart:
   id: desk_uart
   baud_rate: 9600
   tx_pin: D8
-  rx_pin: D6
+  rx_pin: D7
+
+i2c:
+
+pcf8574:
+  - id: 'pcf8574_hub'
+    address: 0x20
+    pcf8575: false
 
 sensor:
   - platform: custom
@@ -44,20 +51,29 @@ mqtt:
 
 output:
   - platform: gpio
-    pin:
-      number: D1
-      inverted: true
-    id: raise_output
-  - platform: gpio
-    pin:
-      number: D2
-      inverted: true
     id: lower_output
-  - platform: gpio
     pin:
-      number: D5
+      pcf8574: pcf8574_hub
+      number: 0
+      mode:
+        output: true
       inverted: true
+  - platform: gpio
+    id: raise_output
+    pin:
+      pcf8574: pcf8574_hub
+      number: 1
+      mode:
+        output: true
+      inverted: true
+  - platform: gpio
     id: memory_key_output
+    pin:
+      pcf8574: pcf8574_hub
+      number: 2
+      mode:
+        output: true
+      inverted: true
 
 switch:
   - platform: template
