@@ -1,31 +1,10 @@
-substitutions:
-  device_name: Desk
-  name: desk
-
-esphome:
-  name: ${name}
-  comment: ${device_name}
-  platform: ESP8266
-  board: nodemcuv2
-  includes:
-    - src/uplift_height_sensor.h
-
-wifi:
-  ssid: !secret wifi_ssid
-  password: !secret wifi_password
+<<: !include common.yaml
 
 uart:
   id: desk_uart
   baud_rate: 9600
   tx_pin: D8
   rx_pin: D7
-
-i2c:
-
-pcf8574:
-  - id: 'pcf8574_hub'
-    address: 0x20
-    pcf8575: false
 
 sensor:
   - platform: custom
@@ -39,15 +18,6 @@ sensor:
       unit_of_measurement: mm
       accuracy_decimals: 0
       icon: "mdi:counter"
-
-# Enable logging
-logger:
-  level: INFO
-  baud_rate: 9600
-
-mqtt:
-  broker: !secret mqtt_server
-  log_topic: desk/logs
 
 output:
   - platform: gpio
