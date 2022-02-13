@@ -1,8 +1,8 @@
 #include "esphome.h"
 
-class DeskHeightSensor : public PollingComponent, public UARTDevice, public Sensor {
+class UpliftHeightSensor : public PollingComponent, public UARTDevice, public Sensor {
 public:
-  DeskHeightSensor(UARTComponent *parent) : UARTDevice(parent) {}
+  UpliftHeightSensor(UARTComponent *parent) : UARTDevice(parent) {}
 
   int lastPublished;
   int height;

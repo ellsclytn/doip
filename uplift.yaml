@@ -8,7 +8,7 @@ esphome:
   platform: ESP8266
   board: nodemcuv2
   includes:
-    - src/desk_height_sensor.h
+    - src/uplift_height_sensor.h
 
 wifi:
   ssid: !secret wifi_ssid
@@ -30,9 +30,9 @@ pcf8574:
 sensor:
   - platform: custom
     lambda: |-
-      auto desk_height_sensor = new DeskHeightSensor(id(desk_uart));
-      App.register_component(desk_height_sensor);
-      return {desk_height_sensor};
+      auto uplift_height_sensor = new UpliftHeightSensor(id(desk_uart));
+      App.register_component(uplift_height_sensor);
+      return {uplift_height_sensor};
     sensors:
       id: "desk_height"
       name: Desk Height
