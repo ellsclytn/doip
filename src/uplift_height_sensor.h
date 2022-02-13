@@ -44,7 +44,7 @@ public:
           /* ESP_LOGD("DEBUG", "Byte index %d: %02x", byteIndex, incomingByte); */
           height = ((unsigned int)highByte << 8) + incomingByte;
           byteIndex = 0;
-          highByte = NULL;
+          highByte = 0;
 
           break;
         default:

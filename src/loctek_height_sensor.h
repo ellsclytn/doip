@@ -6,7 +6,7 @@ class LoctekHeightSensor : public Component, public UARTDevice, public Sensor
 public:
   LoctekHeightSensor(UARTComponent *parent) : UARTDevice(parent) {}
 
-  float value = NULL;
+  float value = -1;
   float lastPublished = -1;
   unsigned long history[5];
 
@@ -170,7 +170,7 @@ public:
            // End byte
       if (incomingByte == 0x9d)
       {
-        if (value && value != lastPublished)
+        if (value != -1 && value != lastPublished)
         {
           publish_state(value);
             lastPublished = value;
