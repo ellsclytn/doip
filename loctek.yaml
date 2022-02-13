@@ -103,9 +103,9 @@ cover:
               id: desk_height
               below: ${max_height}
           then:
-          - logger.log: "Executing up command"
-          - switch.turn_on: switch_up
-          - delay: 10ms
+            - logger.log: "Executing up command"
+            - switch.turn_on: switch_up
+            - delay: 10ms
 
     # Move desk down
     close_action:
@@ -115,7 +115,7 @@ cover:
               id: desk_height
               above: ${min_height}
           then:
-          - logger.log: "Executing down command"
-          - switch.turn_on: switch_down
-          - delay: 10ms
+            - logger.log: "Executing down command"
+            - switch.turn_on: switch_down
+            - delay: 10ms
     optimistic: true
