@@ -3,8 +3,41 @@
 uart:
   - id: desk_uart
     baud_rate: 9600
-    tx_pin: D6
+    tx_pin: D0 # transmit out to control box
     rx_pin: D5
+  - id: keypad_uart
+    baud_rate: 9600
+    tx_pin: D8 # WAKE pin normally, but we're not using deep sleep. Need any old pin because uart requires both a TX and RX, even if only one is in use
+    rx_pin: D6 # incoming transmission from panel
+
+script:
+  - id: screen_timer
+    mode: restart
+    then:
+     # on_start
+     - logger.log: "Executing screen timer command"
+     - switch.turn_on: virtual_screen
+     - delay: 12s  # timer length (keypad screen timeout is 10s + 2s buffer)
+     # - switch.turn_off: virtual_screen
+     - if:
+        condition:
+          binary_sensor.is_off : screen
+        then:
+        - switch.turn_off: virtual_screen
+     # on_end
+
+  - id: script_start_command
+    mode: restart
+    then:
+     - logger.log: "Executing Empty command"
+     - if:
+        condition:
+         switch.is_off : virtual_screen
+        then:
+          - script.execute: screen_timer
+          - delay: 480ms
+        else:
+          - script.execute: screen_timer
 
 sensor:
   - platform: wifi_signal
@@ -25,38 +58,162 @@ sensor:
       unit_of_measurement: cm
       accuracy_decimals: 1
       icon: "mdi:counter"
+      on_value:
+        then:
+          - script.execute: screen_timer
+          - cover.template.publish:
+             id: desk
+             position: !lambda |-
+                 // The sensor outputs values from min_height (cm) to max_height (cm)
+                 // We need to translate this to 0 - 1 scale.
+                 float position = (float(x) - float(${min_height})) / (float(${max_height}) - float(${min_height}));
+                 return position;
 
-switch:
+  - platform: custom
+    lambda: |-
+      auto loctek_keypad_sensor = new LoctekKeypad(id(keypad_uart));
+      App.register_component(loctek_keypad_sensor);
+      return {loctek_keypad_sensor};
+    sensors:
+      id: "desk_command"
+      name: Desk command
+      icon: "mdi:counter"
+      on_value:
+        then:
+          lambda: |-
+            if(!id(keypad_switch).state)
+            {
+              if(id(desk_command).state == 1)
+              {
+                id(desk).open();
+              } else if(id(desk_command).state == 2)
+              {
+                id(desk).close();
+              } else if(id(desk_command).state == 3)
+              {
+                id(switch_preset1).turn_on();
+              } else if(id(desk_command).state == 4)
+              {
+                id(switch_preset2).turn_on();
+              } else if(id(desk_command).state == 5)
+              {
+                id(switch_preset3).turn_on();
+              }  else if(id(desk_command).state == 6)
+              {
+                id(switch_m).turn_on();
+              } else if(id(desk_command).state == 7)
+              {
+                id(switch_alarm).turn_on();
+              } else if(id(desk_command).state == 8)
+              {
+                id(desk).stop();
+              }
+            }
+binary_sensor:
   - platform: gpio
-    name: "Virtual Screen"
+    name: "Screen"
+    id: "screen"
     pin:
       pcf8574: pcf8574_hub
-      number: 3 # P3 on PCF, Pin 4 on RJ45
+      number: 4
       mode:
         output: true
-    restore_mode: ALWAYS_ON
-    internal: true
+    internal: false
+    on_press:
+      then:
+        - switch.turn_on: virtual_screen
+    on_release:
+      then:
+        - switch.turn_off: virtual_screen
 
-  - platform: uart
+switch:
+  - platform: template
+    name: "Keypad locked"
+    icon: mdi:key
+    id: "keypad_switch"
+    internal: false
+    restore_state: true
+    assumed_state: false
+    optimistic: true
+
+  - platform: template
     name: "Preset 1"
     id: switch_preset1
     icon: mdi:numeric-1-box
-    data: [0x9b, 0x06, 0x02, 0x04, 0x00, 0xac, 0xa3, 0x9d]
-    uart_id: desk_uart
+    turn_on_action:
+     - logger.log: "Executing Preset 1 command"
+     - script.execute: script_start_command
+     - script.wait: script_start_command
+     - uart.write:
+         id: desk_uart
+         data: [0x9b, 0x06, 0x02, 0x04, 0x00, 0xac, 0xa3, 0x9d]
+    internal: false
 
-  - platform: uart
+  - platform: template
     name: "Preset 2"
     id: switch_preset2
     icon: mdi:numeric-2-box
-    data: [0x9b, 0x06, 0x02, 0x08, 0x00, 0xac, 0xa6, 0x9d]
-    uart_id: desk_uart
+    turn_on_action:
+     - logger.log: "Executing Preset 2 command"
+     - script.execute: script_start_command
+     - script.wait: script_start_command
+     - uart.write:
+         id: desk_uart
+         data: [0x9b, 0x06, 0x02, 0x08, 0x00, 0xac, 0xa6, 0x9d]
+    internal: false
 
-  - platform: uart
+  - platform: template
     name: "Preset 3"
     id: switch_preset3
     icon: mdi:numeric-3-box
-    data: [0x9b, 0x06, 0x02, 0x10, 0x00, 0xac, 0xac, 0x9d]
-    uart_id: desk_uart
+    turn_on_action:
+     - logger.log: "Executing Preset 3 command"
+     - script.execute: script_start_command
+     - script.wait: script_start_command
+     - uart.write:
+         id: desk_uart
+         data: [0x9b, 0x06, 0x02, 0x10, 0x00, 0xac, 0xac, 0x9d]
+    internal: false
+
+  - platform: template
+    name: "M"
+    id: switch_m
+    icon: mdi:alpha-m-circle
+    turn_on_action:
+     - logger.log: "Executing Preset 3 command"
+     - script.execute: script_start_command
+     - script.wait: script_start_command
+     - uart.write:
+         id: desk_uart
+         data: [0x9b, 0x06, 0x02, 0x20, 0x00, 0xac, 0xb8, 0x9d]
+    internal: false
+
+  - platform: template
+    name: "Alarm"
+    id: switch_alarm
+    icon: mdi:alpha-m-circle
+    turn_on_action:
+     - logger.log: "Executing Alarm command"
+     - script.execute: script_start_command
+     - script.wait: script_start_command
+     - uart.write:
+         id: desk_uart
+         data: [0x9b, 0x06, 0x02, 0x40, 0x00, 0xac, 0x90, 0x9d]
+    internal: false
+
+  - platform: gpio
+    name: "Virtual Screen"
+    id: "virtual_screen"
+    pin:
+      pcf8574: pcf8574_hub
+      number: 1
+      mode:
+        output: true
+    # pin:
+    #   number: GPIO23
+    #   mode: OUTPUT
+    restore_mode: ALWAYS_OFF
+    internal: false
 
   - platform: uart
     name: "Up"
@@ -64,7 +221,7 @@ switch:
     icon: mdi:arrow-up-bold
     data: [0x9b, 0x06, 0x02, 0x01, 0x00, 0xfc, 0xa0, 0x9d]
     uart_id: desk_uart
-    internal: true
+    internal: false
 
   - platform: uart
     name: "Down"
@@ -72,50 +229,59 @@ switch:
     icon: mdi:arrow-down-bold
     data: [0x9b, 0x06, 0x02, 0x02, 0x00, 0x0c, 0xa0, 0x9d]
     uart_id: desk_uart
-    internal: true
+    internal: false
 
   - platform: uart
-    name: "M"
-    id: switch_m
-    icon: mdi:alpha-m-circle
-    data: [0x9b, 0x06, 0x02, 0x20, 0x00, 0xac, 0xb8, 0x9d]
-    uart_id: desk_uart
-
-  - platform: uart
-    name: "(wake up)"
-    id: switch_wake_up
-    icon: mdi:gesture-tap-button
+    name: "Empty command"
+    id: switch_empty
     data: [0x9b, 0x06, 0x02, 0x00, 0x00, 0x6c, 0xa1, 0x9d]
     uart_id: desk_uart
+    internal: false
 
 cover:
   - platform: template
-    # icon: mdi:table-chair
-    # icon: mdi-human-male-height-variant
     name: "Desk"
+    id: "desk"
     assumed_state: true
+    # has_position: true
+    # position_action:
+    #   - logger.log: "Requesting action change"
 
     # Move desk up
     open_action:
+      - script.execute: script_start_command
+      - script.wait: script_start_command
       - while:
           condition:
             sensor.in_range:
               id: desk_height
               below: ${max_height}
           then:
-            - logger.log: "Executing up command"
-            - switch.turn_on: switch_up
-            - delay: 10ms
+          - logger.log: "Executing up command"
+          # - cover.template.publish:
+          #     id: desk
+          #     current_operation: OPENING
+          - switch.turn_on: switch_up
+          - delay: 108ms
+
+
 
     # Move desk down
     close_action:
+      - script.execute: script_start_command
+      - script.wait: script_start_command
       - while:
           condition:
             sensor.in_range:
               id: desk_height
               above: ${min_height}
           then:
-            - logger.log: "Executing down command"
-            - switch.turn_on: switch_down
-            - delay: 10ms
+          - logger.log: "Executing down command"
+          # - cover.template.publish:
+          #     id: desk
+          #     current_operation: CLOSING
+          - switch.turn_on: switch_down
+          - delay: 108ms
+
+
     optimistic: true

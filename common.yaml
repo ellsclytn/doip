@@ -12,6 +12,7 @@ esphome:
   includes:
     - src/loctek_height_sensor.h
     - src/uplift_height_sensor.h
+    - src/loctek_keypad.h
 
 wifi:
   ssid: !secret wifi_ssid
