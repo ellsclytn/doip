@@ -36,10 +36,3 @@ ota:
 logger:
   level: INFO
   baud_rate: 9600
-
-i2c:
-
-pcf8574:
-  - id: "pcf8574_hub"
-    address: 0x20
-    pcf8575: false

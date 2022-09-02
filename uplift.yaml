@@ -4,9 +4,16 @@ uart:
   id: desk_uart
   baud_rate: 9600
   tx_pin: D8
-  rx_pin: D7
+  rx_pin: D6
 
 sensor:
+  - platform: wifi_signal
+    name: "WiFi Signal"
+    update_interval: 60s
+
+  - platform: uptime
+    name: Uptime
+
   - platform: custom
     lambda: |-
       auto uplift_height_sensor = new UpliftHeightSensor(id(desk_uart));
@@ -18,153 +25,3 @@ sensor:
       unit_of_measurement: mm
       accuracy_decimals: 0
       icon: "mdi:counter"
-
-output:
-  - platform: gpio
-    id: lower_output
-    pin:
-      pcf8574: pcf8574_hub
-      number: 0
-      mode:
-        output: true
-      inverted: true
-  - platform: gpio
-    id: raise_output
-    pin:
-      pcf8574: pcf8574_hub
-      number: 1
-      mode:
-        output: true
-      inverted: true
-  - platform: gpio
-    id: memory_key_output
-    pin:
-      pcf8574: pcf8574_hub
-      number: 2
-      mode:
-        output: true
-      inverted: true
-
-switch:
-  - platform: template
-    name: Raise
-    id: raise_switch
-    turn_on_action:
-      - switch.turn_off: lower_switch
-      - switch.turn_off: memory_1_switch
-      - switch.turn_off: memory_2_switch
-      - switch.turn_off: memory_3_switch
-      - switch.turn_off: memory_4_switch
-      - output.turn_on: raise_output
-      - switch.template.publish:
-          id: raise_switch
-          state: true
-    turn_off_action:
-      - output.turn_off: raise_output
-      - switch.template.publish:
-          id: raise_switch
-          state: false
-  - platform: template
-    name: Lower
-    id: lower_switch
-    turn_on_action:
-      - switch.turn_off: raise_switch
-      - switch.turn_off: memory_1_switch
-      - switch.turn_off: memory_2_switch
-      - switch.turn_off: memory_3_switch
-      - switch.turn_off: memory_4_switch
-      - output.turn_on: lower_output
-      - switch.template.publish:
-          id: lower_switch
-          state: true
-    turn_off_action:
-      - output.turn_off: lower_output
-      - switch.template.publish:
-          id: lower_switch
-          state: false
-  - platform: template
-    name: Memory 1
-    id: memory_1_switch
-    turn_on_action:
-      - switch.turn_off: raise_switch
-      - switch.turn_off: lower_switch
-      - switch.turn_off: memory_2_switch
-      - switch.turn_off: memory_3_switch
-      - switch.turn_off: memory_4_switch
-      - output.turn_on: raise_output
-      - output.turn_on: lower_output
-      - switch.template.publish:
-          id: memory_1_switch
-          state: true
-      - delay: 500ms
-      - switch.turn_off: memory_1_switch
-    turn_off_action:
-      - output.turn_off: raise_output
-      - output.turn_off: lower_output
-      - switch.template.publish:
-          id: memory_1_switch
-          state: false
-  - platform: template
-    name: Memory 2
-    id: memory_2_switch
-    turn_on_action:
-      - switch.turn_off: raise_switch
-      - switch.turn_off: lower_switch
-      - switch.turn_off: memory_1_switch
-      - switch.turn_off: memory_3_switch
-      - switch.turn_off: memory_4_switch
-      - output.turn_on: memory_key_output
-      - switch.template.publish:
-          id: memory_2_switch
-          state: true
-      - delay: 500ms
-      - switch.turn_off: memory_2_switch
-    turn_off_action:
-      - output.turn_off: memory_key_output
-      - switch.template.publish:
-          id: memory_2_switch
-          state: false
-  - platform: template
-    name: Memory 3
-    id: memory_3_switch
-    turn_on_action:
-      - switch.turn_off: raise_switch
-      - switch.turn_off: lower_switch
-      - switch.turn_off: memory_1_switch
-      - switch.turn_off: memory_2_switch
-      - switch.turn_off: memory_4_switch
-      - output.turn_on: memory_key_output
-      - output.turn_on: lower_output
-      - switch.template.publish:
-          id: memory_3_switch
-          state: true
-      - delay: 500ms
-      - switch.turn_off: memory_3_switch
-    turn_off_action:
-      - output.turn_off: memory_key_output
-      - output.turn_off: lower_output
-      - switch.template.publish:
-          id: memory_3_switch
-          state: false
-  - platform: template
-    name: Memory 4
-    id: memory_4_switch
-    turn_on_action:
-      - switch.turn_off: raise_switch
-      - switch.turn_off: lower_switch
-      - switch.turn_off: memory_1_switch
-      - switch.turn_off: memory_2_switch
-      - switch.turn_off: memory_3_switch
-      - output.turn_on: memory_key_output
-      - output.turn_on: raise_output
-      - switch.template.publish:
-          id: memory_4_switch
-          state: true
-      - delay: 500ms
-      - switch.turn_off: memory_4_switch
-    turn_off_action:
-      - output.turn_off: memory_key_output
-      - output.turn_off: raise_output
-      - switch.template.publish:
-          id: memory_4_switch
-          state: false
