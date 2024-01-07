@@ -26,7 +26,8 @@ captive_portal:
 
 # Home Assistant API
 api:
-  password: !secret api_password
+  encryption:
+    key: !secret encryption_key
 
 # Support OTA updates
 ota:
